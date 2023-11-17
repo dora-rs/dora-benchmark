@@ -1,0 +1,5 @@
+[workspace]
+members = ["node", "sink"]
+
+[workspace.dependencies]
+dora-node-api = { path = "../../../dora/apis/rust/node" }

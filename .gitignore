@@ -1,0 +1,10 @@
+*.csv
+dora-rs/rs-latency-daemon/target/
+dora-rs/rs-latency-old/target/
+**/*.pyc
+
+**/**/target/
+**/**/.cargo
+**/**/install
+**/**/log
+**/**/build
