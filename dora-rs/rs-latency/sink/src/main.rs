@@ -1,5 +1,9 @@
 use csv::Writer;
+use dora_node_api::arrow::array::{AsArray, PrimitiveArray};
+use dora_node_api::arrow::datatypes::UInt64Type;
 use dora_node_api::{self, DoraNode, Event};
+use eyre::ContextCompat;
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use uhlc::system_time_clock;
 use uhlc::HLC;
@@ -12,7 +16,7 @@ fn main() -> eyre::Result<()> {
     let (_node, mut events) = DoraNode::init_from_env()?;
 
     // latency is tested first
-    let mut latency = true;
+    let latency = true;
 
     let mut current_size = 0;
     let mut n = 0;
@@ -25,17 +29,40 @@ fn main() -> eyre::Result<()> {
         .next()
         .expect("Could not extract date from timestamp.");
 
+    // Preallocated vector
+    let sizes = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
+    let mut root_vec = HashMap::new();
+    for size in sizes {
+        root_vec.insert(size, vec![0u64; size]);
+    }
+
     while let Some(event) = events.recv() {
-        let t_received = system_time_clock();
         match event {
-            Event::Input { id, data } => {
+            Event::Input {
+                id: _,
+                data,
+                metadata: _,
+            } => {
                 // check if new size bracket
-                let data = data.unwrap();
-                let time_bytes = data.get(0..8).unwrap();
-                let time_u64: &[u64] = bytemuck::cast_slice(time_bytes);
-                let t_send = uhlc::NTP64(*time_u64.first().unwrap());
+                let array: &PrimitiveArray<UInt64Type> =
+                    data.as_primitive_opt().context("not a primitive array")?;
+                let array = array.values();
+                let time_u64 = array.get(0).context("could not slice data")?;
+                let t_send = uhlc::NTP64(*time_u64);
+
+                // .to_vec() Data Latency
+                // let _owned_data = array.to_vec();
+
+                // Preallocated data
+                // let _ = root_vec
+                // .get_mut(&data.len())
+                // .unwrap()
+                // .copy_from_slice(array);
+
+                let t_received = system_time_clock();
+
                 latencies.push((t_received - t_send).to_duration());
-                let data_len = data.len();
+                let data_len = data.len() * 8;
                 if data_len != current_size {
                     if n > 0 {
                         record_results(start, current_size, n, latencies, latency, date);
@@ -60,11 +87,11 @@ fn main() -> eyre::Result<()> {
 }
 
 fn record_results(
-    start: Instant,
+    _start: Instant,
     current_size: usize,
     n: u32,
     latencies: Vec<Duration>,
-    latency: bool,
+    _latency: bool,
     date: &str,
 ) {
     let avg_latency = latencies.iter().sum::<Duration>() / n;
