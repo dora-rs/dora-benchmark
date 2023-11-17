@@ -7,6 +7,9 @@
 sudo wget https://github.com/dora-rs/dora/releases/download/v0.3.0/dora-v0.3.0-x86_64-Linux.zip && sudo unzip dora-v0.3.0-x86_64-Linux.zip -d ~/.local/bin
 pip install dora-rs==0.3.0
 
+## In development, You can also use:
+## maturin develop --release
+
 ## To test Python version of dora
 cd dora-rs/py-latency
 dora up
@@ -18,6 +21,7 @@ dora start dataflow_node.yml --attach
 dora start dataflow_op.yml --attach
 
 ## To test Rust version of dora
+## This requires that dora-rs is placed at: "../../../dora/apis/rust/node"
 cd dora-rs/rs-latency
 cargo build --release --all
 dora start dataflow.yml
