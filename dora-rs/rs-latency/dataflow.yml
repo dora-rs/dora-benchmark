@@ -3,6 +3,8 @@ nodes:
     custom:
       build: cargo build -p benchmark-example-node --release
       source: ./target/release/benchmark-example-node
+      inputs:
+        tick: dora/timer/millis/20
       outputs:
         - latency
         - throughput
