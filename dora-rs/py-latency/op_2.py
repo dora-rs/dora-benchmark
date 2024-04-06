@@ -54,7 +54,7 @@ class Operator:
 
         """
         data = dora_input["value"]
-        length = len(data)
+        length = len(data) * 8
 
         # frame = np.frombuffer(data, dtype="uint8")
         # frame = cv2.imdecode(frame, -1)

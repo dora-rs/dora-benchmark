@@ -17,19 +17,18 @@ import time
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt8MultiArray
+from std_msgs.msg import UInt64MultiArray
 
 SIZES = [
     8,
     64,
     512,
     2048,
-    4096,
-    4 * 4096,
-    10 * 4096,
-    100 * 4096,
-    1000 * 4096,
-    10000 * 4096,
+    4 * 512,
+    10 * 512,
+    100 * 512,
+    1000 * 512,
+    10000 * 512,
     8,
 ]
 
@@ -37,23 +36,23 @@ SIZES = [
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__("minimal_publisher")
-        self.publisher_ = self.create_publisher(UInt8MultiArray, "topic", 10)
+        self.publisher_ = self.create_publisher(UInt64MultiArray, "topic", 10)
         timer_period = 0.05  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
         self.j = 0
 
     def timer_callback(self):
-        msg = UInt8MultiArray()
+        msg = UInt64MultiArray()
         random_data = np.array(
-            np.random.randint(255, size=SIZES[self.i], dtype=np.uint8)
+            np.random.randint(255, size=SIZES[self.i], dtype=np.uint64)
         )
 
-        random_data[0:8] = np.array([time.perf_counter()]).view(
-            np.uint8
-        )  # <- Timer starts here
+        random_data[0] = np.array([time.perf_counter_ns()])
 
-        random_data = random_data.data
+        random_data = (
+            random_data.tobytes()
+        )  # <- Converting to bytes is required as there is no easy way to pass the memoryview to ROS2 Messages
         msg.data.frombytes(random_data)
         self.publisher_.publish(msg)
         # self.get_logger().info('Publishing: "%s"' % msg.data)

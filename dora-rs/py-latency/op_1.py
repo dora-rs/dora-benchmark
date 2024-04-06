@@ -15,12 +15,11 @@ SIZES = [
     64,
     512,
     2048,
-    4096,
-    4 * 4096,
-    10 * 4096,
-    100 * 4096,
-    1000 * 4096,
-    10000 * 4096,
+    4 * 512,
+    10 * 512,
+    100 * 512,
+    1000 * 512,
+    10000 * 512,
     8,
 ]
 
@@ -70,7 +69,9 @@ class Operator:
             self.i += 1
 
         random_data = np.random.randint(
-            255, size=SIZES[self.size_index], dtype=np.int64
+            255,
+            size=SIZES[self.size_index],
+            dtype=np.int64,  # <- Can be replaced with int8
         )
         random_data[0] = np.array([time.perf_counter_ns()])
 
@@ -80,6 +81,6 @@ class Operator:
         # )  # , dora_input["metadata"])
 
         ## Arrow Test: Using Arrow
-        send_output("latency", pa.array(random_data))
+        send_output("latency", pa.array(random_data), dora_input["metadata"])
 
         return DoraStatus.CONTINUE

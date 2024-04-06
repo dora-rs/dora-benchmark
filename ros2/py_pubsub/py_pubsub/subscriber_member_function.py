@@ -19,7 +19,7 @@ import time
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt8MultiArray
+from std_msgs.msg import UInt64MultiArray
 
 LATENCY = True
 
@@ -54,27 +54,25 @@ class MinimalSubscriber(Node):
     def __init__(self):
         super().__init__("minimal_subscriber")
         self.subscription = self.create_subscription(
-            UInt8MultiArray, "topic", self.listener_callback, 10
+            UInt64MultiArray, "topic", self.listener_callback, 10
         )
         self.subscription  # prevent unused variable warning
         self.current_size = 0
         self.latencies = []
         self.n = 0
 
-    def listener_callback(self, msg: UInt8MultiArray):
+    def listener_callback(self, msg: UInt64MultiArray):
 
-        t_received = time.perf_counter()  # <- Timer stops here
-        length = len(msg.data)
+        t_received = time.perf_counter_ns()
+        length = len(msg.data) * 8  # As it is Uint64
         if length != self.current_size:
             if self.n > 0:
                 record_results([], self.current_size, self.latencies, LATENCY)
             self.current_size = length
             self.n = 0
-            start = time.perf_counter()
             self.latencies = []
-        t_send = np.frombuffer(msg.data.tobytes()[:8]).view(np.float64)
-        self.latencies.append((t_received - t_send) * 1_000_000)
-        # print(data)
+        t_send = msg.data[0]
+        self.latencies.append((t_received - t_send) / 1000)
         self.n += 1
         # self.get_logger().info('I heard: "%s"' % msg.data)
 
