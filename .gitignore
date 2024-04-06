@@ -1,4 +1,5 @@
 *.csv
+*.arrow
 dora-rs/rs-latency-daemon/target/
 dora-rs/rs-latency-old/target/
 **/*.pyc

@@ -26,3 +26,13 @@ cd dora-rs/rs-latency
 cargo build --release --all
 dora start dataflow.yml
 ```
+
+## Getting started ROS2
+
+```bash
+cd dora-benchmark/ros2/py_pubsub
+colcon build
+. install/setup.bash
+ros2 run py_pubsub listener & ros2 run py_pubsub talker
+cat time.csv
+```
