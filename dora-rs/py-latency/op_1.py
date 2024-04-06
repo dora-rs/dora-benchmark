@@ -71,16 +71,10 @@ class Operator:
         random_data = np.random.randint(
             255,
             size=SIZES[self.size_index],
-            dtype=np.int64,  # <- Can be replaced with int8
+            dtype=np.uint64,  # <- Can be replaced with int8
         )
-        random_data[0] = np.array([time.perf_counter_ns()])
+        random_data[0] = np.array([time.perf_counter_ns()])  # <- Counter starts here
 
-        ## Arrow Test: Using Pybytes
-        # send_output(
-        # "latency", random_data.tobytes()
-        # )  # , dora_input["metadata"])
-
-        ## Arrow Test: Using Arrow
         send_output("latency", pa.array(random_data), dora_input["metadata"])
 
         return DoraStatus.CONTINUE

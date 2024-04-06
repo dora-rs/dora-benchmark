@@ -40,34 +40,16 @@ class Operator:
         dora_input: dict,
         _send_output: Callable[[str, bytes], None],
     ):
-        """
-
-        Args:
-            dora_input (dict): Input dict containing an `id`, `data` and `metadata`.
-            send_output (Callable[[str, bytes], None]): Send output to the dataflow
-
-        Returns:
-            DoraStatus:
-                CONTINUE means that the operator will
-                    keep listening for further inputs.
-                STOP means that the operator stop listening for inputs.
-
-        """
         data = dora_input["value"]
         length = len(data) * 8
 
-        # frame = np.frombuffer(data, dtype="uint8")
-        # frame = cv2.imdecode(frame, -1)
-        t_received = time.perf_counter_ns()
+        t_received = time.perf_counter_ns()  # <- Counter stops here
         if length != self.current_size:
             if self.n > 0:
                 record_results(NAME, self.current_size, self.latencies)
             self.current_size = length
             self.n = 0
             self.latencies = []
-
-        ## Arrow Test: Using PyBytes
-        # t_send = np.frombuffer(dora_input["data"][:8], np.uint64)
 
         ## Arrow Test: Using Arrow
         t_send = data[0].as_py()

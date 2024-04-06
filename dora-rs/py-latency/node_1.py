@@ -28,9 +28,9 @@ pa.array([])
 # test latency first
 for size in SIZES:
     for _ in range(0, 100):
-        random_data = np.random.randint(1000, size=size, dtype=np.int64)
+        random_data = np.random.randint(1000, size=size, dtype=np.uint64)
         t_send = time.perf_counter_ns()
-        random_data = np.array([[t_send, t_send], [t_send, t_send]])
+        random_data[0] = np.array([time.perf_counter_ns()])
 
         ## Arrow Test: Using Pybytes
         # node.send_output("latency", random_data.tobytes())
