@@ -5,10 +5,9 @@
 ```bash
 ## If you do not have dora-rs installed
 # sudo apt update && sudo apt-get install wget
-sudo wget https://github.com/dora-rs/dora/releases/download/v0.3.2/dora-v0.3.2-x86_64-Linux.zip && sudo unzip dora-v0.3.2-x86_64-Linux.zip -d ~/.local/bin
+cargo install dora-cli --locked
 pip install dora-rs==0.3.2
-
-## In development, You can also use:
+## In development, within the dora-node-api-python folder, You can also use:
 ## maturin develop --release
 
 ## To test Python version of dora
