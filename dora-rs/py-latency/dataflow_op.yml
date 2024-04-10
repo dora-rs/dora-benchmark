@@ -11,8 +11,3 @@ nodes:
       python: ./op_2.py
       inputs:
         latency: op_1/latency
-  - id: dora-record
-    custom:
-      source: dora-record
-      inputs:
-        latency: op_1/latency
