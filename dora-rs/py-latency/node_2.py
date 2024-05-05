@@ -3,7 +3,7 @@
 
 import time
 
-import numpy as np
+
 import pyarrow as pa
 from dora import Node
 from helper import record_results
@@ -25,8 +25,7 @@ while True:
         data = event["value"]
     else:
         break
-    print(data)
-    length = len(data)
+    length = len(data) * 8
 
     # frame = np.frombuffer(data, dtype="uint8")
     # frame = cv2.imdecode(frame, -1)
@@ -43,7 +42,7 @@ while True:
     # t_send = np.frombuffer(data[:8], np.uint64)[0]
     #
     ## Arrow Test: Using Arrow
-    t_send = data[0][0].as_py()
+    t_send = data[0].as_py()
     latencies.append((t_received - t_send) / 1000)
 
     n += 1

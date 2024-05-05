@@ -7,17 +7,15 @@ import numpy as np
 import pyarrow as pa
 from dora import Node
 
+
 SIZES = [
     8,
     64,
     512,
-    2048,
-    4096,
-    4 * 4096,
-    10 * 4096,
-    100 * 4096,
-    1000 * 4096,
-    10000 * 4096,
+    10 * 512,
+    100 * 512,
+    1000 * 512,
+    10000 * 512,
     8,
 ]
 
@@ -32,8 +30,5 @@ for size in SIZES:
         t_send = time.perf_counter_ns()
         random_data[0] = np.array([time.perf_counter_ns()])
 
-        ## Arrow Test: Using Pybytes
-        # node.send_output("latency", random_data.tobytes())
-        ## Arrow Test: Using Arrow
         node.send_output("latency", pa.array(random_data))
-        time.sleep(0.1)
+        time.sleep(0.05)

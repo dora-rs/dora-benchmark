@@ -1,13 +1,11 @@
 nodes:
   - id: node_1
     custom:
-      source: shell
-      args: python ./node_1.py
+      source: node_1.py
       outputs:
         - latency
   - id: node_2
     custom:
-      source: shell
-      args: python ./node_2.py
+      source: node_2.py
       inputs:
         latency: node_1/latency

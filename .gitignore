@@ -9,3 +9,4 @@ dora-rs/rs-latency-old/target/
 **/**/install
 **/**/log
 **/**/build
+*.txt
