@@ -102,11 +102,13 @@ fn record_results(
         .open("timer.csv")
         .unwrap();
     let mut wtr = Writer::from_writer(file);
+    let name = std::env::var("NAME").unwrap_or_else(|_| NAME.to_string());
+
     wtr.write_record(&[
         date.to_string(),
         LANGUAGE.to_string(),
         PLATFORM.to_string(),
-        NAME.to_string(),
+        name,
         current_size.to_string(),
         avg_latency.as_micros().to_string(),
     ])
