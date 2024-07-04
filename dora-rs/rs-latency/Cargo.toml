@@ -1,5 +1,7 @@
 [workspace]
 members = ["node", "sink"]
+resolver = "2"
+
 
 [workspace.dependencies]
-dora-node-api = { path = "../../../dora/apis/rust/node" }
+dora-node-api = "0.3.5" # { path = "../../../dora/apis/rust/node" }
