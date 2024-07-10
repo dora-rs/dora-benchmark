@@ -350,7 +350,9 @@ dependencies = [
  "csv",
  "dora-node-api",
  "eyre",
+ "once_cell",
  "rand",
+ "sysinfo",
  "uhlc",
 ]
 
@@ -471,6 +473,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-deque"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613f8cc01fe9cf1a3eb3d7f488fd2fa8388403e97039e2f73692932e291a770d"
+dependencies = [
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-utils"
 version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -539,8 +560,6 @@ dependencies = [
 [[package]]
 name = "dora-arrow-convert"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c924a392b436e3a8a6e508e604eff47dfea0f1a96f0f0a39692c22ef041f5d1"
 dependencies = [
  "arrow",
  "eyre",
@@ -549,8 +568,6 @@ dependencies = [
 [[package]]
 name = "dora-core"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7be4d038f9ec95fa38a207d67f93c02860d3f52838bb063f8c4fedbb1de437d6"
 dependencies = [
  "aligned-vec",
  "dora-message",
@@ -571,8 +588,6 @@ dependencies = [
 [[package]]
 name = "dora-message"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02f7dd7598edfe42370222f8c6446fe90a5b01c40da5ae30e755cdfff71569c7"
 dependencies = [
  "arrow-data",
  "arrow-schema",
@@ -584,8 +599,6 @@ dependencies = [
 [[package]]
 name = "dora-node-api"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e81424629878132deeb51ccb13a06d537db4bbc79a6dcdaa8c399963babd9c4a"
 dependencies = [
  "aligned-vec",
  "arrow",
@@ -608,8 +621,6 @@ dependencies = [
 [[package]]
 name = "dora-tracing"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f50813996d0f48fc41663f46904d25d890a66fd0b7f5f9df24f8c2a66a8cc464"
 dependencies = [
  "eyre",
  "opentelemetry",
@@ -1186,6 +1197,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ntapi"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8a3895c6391c39d7fe7ebc444a87eb2991b2a0bc718fdabd071eec617fc68e4"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
 name = "nu-ansi-term"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1514,6 +1534,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "rayon"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1736,8 +1776,6 @@ dependencies = [
 [[package]]
 name = "shared-memory-server"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9554cb9e96e2e1984580a6b98d845db97c5e94c84bbe629ec92f82cd4764d06"
 dependencies = [
  "bincode",
  "eyre",
@@ -1827,6 +1865,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "sysinfo"
+version = "0.30.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a5b4ddaee55fb2bea2bf0e5000747e5f5c0de765e5a5ff87f4cd106439f4bb3"
+dependencies = [
+ "cfg-if",
+ "core-foundation-sys",
+ "libc",
+ "ntapi",
+ "once_cell",
+ "rayon",
+ "windows 0.52.0",
 ]
 
 [[package]]
@@ -2155,7 +2208,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b7b128a98c1cfa201b09eb49ba285887deb3cbe7466a98850eb1adabb452be5"
 dependencies = [
- "windows",
+ "windows 0.34.0",
 ]
 
 [[package]]
@@ -2191,6 +2244,16 @@ dependencies = [
  "windows_i686_msvc 0.34.0",
  "windows_x86_64_gnu 0.34.0",
  "windows_x86_64_msvc 0.34.0",
+]
+
+[[package]]
+name = "windows"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be"
+dependencies = [
+ "windows-core",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]

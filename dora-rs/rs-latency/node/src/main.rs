@@ -1,7 +1,6 @@
 use dora_node_api::Event;
 use dora_node_api::{self, arrow::array::UInt64Array, dora_core::config::DataId, DoraNode};
 use rand::Rng;
-use std::time::Duration;
 use uhlc::system_time_clock;
 
 fn main() -> eyre::Result<()> {
@@ -10,7 +9,6 @@ fn main() -> eyre::Result<()> {
 
     let (mut node, mut events) = DoraNode::init_from_env()?;
     let sizes = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
-
     // test latency first
     for size in sizes {
         for _ in 0..100 {

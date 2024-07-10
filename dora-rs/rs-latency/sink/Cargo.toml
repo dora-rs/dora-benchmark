@@ -6,9 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dora-node-api = { workspace = true }
+dora-node-api =  { workspace = true }
 eyre = "0.6.8"
 rand = "0.8.5"
 uhlc = "0.5.1"
 bytemuck = "1.12"
 csv = "1.1.6"
+sysinfo = "0.30.13"
+once_cell = "1.19.0"
