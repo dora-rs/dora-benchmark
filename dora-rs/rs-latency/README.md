@@ -50,7 +50,7 @@ dora coordinator &
 dora daemon --machine-id B &
 
 # in rk3568
-dora daemon --machine-id A --coordinator-addr <host-ip>:53290 &
+./dora daemon --machine-id A --coordinator-addr <host-ip>:53290 &
 
 # in host machine
 cd dora-benchmark/dora-rs/rs-latency
