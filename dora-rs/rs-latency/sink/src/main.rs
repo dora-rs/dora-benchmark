@@ -3,14 +3,22 @@ use dora_node_api::arrow::array::{AsArray, PrimitiveArray};
 use dora_node_api::arrow::datatypes::UInt64Type;
 use dora_node_api::{self, DoraNode, Event};
 use eyre::ContextCompat;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use uhlc::system_time_clock;
-use uhlc::HLC;
+use sysinfo::System;
+use uhlc::{system_time_clock, HLC};
 
 static LANGUAGE: &str = "Rust";
-static PLATFORM: &str = "i7-8750@2.20GHz";
 static NAME: &str = "dora-rs daemon Rust";
+static PLATFORM: Lazy<String> = Lazy::new(|| {
+    let sys = System::new_all();
+    if let Some(cpu) = sys.cpus().first() {
+        format!("{}@{:.2}GHz", cpu.brand(), cpu.frequency() as f64 / 1_000.0)
+    } else {
+        "Unknown".to_string()
+    }
+});
 
 fn main() -> eyre::Result<()> {
     let (_node, mut events) = DoraNode::init_from_env()?;
@@ -35,7 +43,6 @@ fn main() -> eyre::Result<()> {
     for size in sizes {
         root_vec.insert(size, vec![0u64; size]);
     }
-
     while let Some(event) = events.recv() {
         match event {
             Event::Input {
@@ -49,7 +56,6 @@ fn main() -> eyre::Result<()> {
                 let array = array.values();
                 let time_u64 = array.get(0).context("could not slice data")?;
                 let t_send = uhlc::NTP64(*time_u64);
-
                 // .to_vec() Data Latency
                 // let _owned_data = array.to_vec();
 
@@ -58,9 +64,7 @@ fn main() -> eyre::Result<()> {
                 // .get_mut(&data.len())
                 // .unwrap()
                 // .copy_from_slice(array);
-
                 let t_received = system_time_clock();
-
                 latencies.push((t_received - t_send).to_duration());
                 let data_len = data.len() * 8;
                 if data_len != current_size {
@@ -103,7 +107,6 @@ fn record_results(
         .unwrap();
     let mut wtr = Writer::from_writer(file);
     let name = std::env::var("NAME").unwrap_or_else(|_| NAME.to_string());
-
     wtr.write_record(&[
         date.to_string(),
         LANGUAGE.to_string(),
