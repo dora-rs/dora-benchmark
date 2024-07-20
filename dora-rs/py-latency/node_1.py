@@ -24,6 +24,8 @@ pa.array([])
 
 # test latency first
 for size in SIZES:
+    if node.next() is None:
+        break
     for _ in range(0, 100):
         now = time.time()
         random_data = np.random.randint(1000, size=size, dtype=np.uint64)
@@ -31,4 +33,3 @@ for size in SIZES:
         random_data[0] = np.array([time.perf_counter_ns()])
 
         node.send_output("latency", pa.array(random_data))
-        time.sleep(0.05 - (time.time() - now))

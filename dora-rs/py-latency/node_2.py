@@ -7,6 +7,7 @@ import time
 import pyarrow as pa
 from dora import Node
 from helper import record_results
+import numpy as np
 
 pa.array([])
 node = Node()
@@ -32,6 +33,11 @@ while True:
     t_received = time.perf_counter_ns()
     if length != current_size:
         if n > 0:
+            print(
+                f"msg size: {current_size} avg latency: ",
+                np.array(latencies).mean(),
+                flush=True,
+            )
             record_results(NAME, current_size, latencies)
         current_size = length
         n = 0
@@ -49,3 +55,11 @@ while True:
     i += 1
 
 record_results(NAME, current_size, latencies)
+
+## Example 1
+del node
+del data
+
+## Example 2
+# del data
+# del node

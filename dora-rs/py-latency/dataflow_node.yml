@@ -1,6 +1,8 @@
 nodes:
   - id: node_1
     custom:
+      inputs:
+        tick: dora/timer/millis/20
       source: node_1.py
       outputs:
         - latency
