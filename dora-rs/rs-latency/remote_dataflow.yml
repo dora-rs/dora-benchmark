@@ -1,7 +1,8 @@
 nodes:
   - id: rust-node
     _unstable_deploy:
-      machine: A
+      machine: B
+    custom:
     build: cargo build -p benchmark-example-node --release
     path: ./target/release/benchmark-example-node
     inputs:
@@ -11,9 +12,12 @@ nodes:
       - throughput
   - id: rust-sink
     _unstable_deploy:
-      machine: B
+      machine: A
+      local: false
+      working_dir: /data
+    custom:
     build: cargo build -p benchmark-example-sink --release
-    path: ./target/release/benchmark-example-sink
+    path: ./benchmark-example-sink
     inputs:
       latency: rust-node/latency
       throughput: rust-node/throughput
