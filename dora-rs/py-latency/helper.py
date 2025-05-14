@@ -19,7 +19,7 @@ LOG_HEADER = [
     "Platform",
     "Name",
     "Size (bit)",
-    "Latency (ns)",
+    "Latency (μs)",
 ]
 
 
