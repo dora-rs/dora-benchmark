@@ -1,11 +1,9 @@
 nodes:
   - id: node_1
-    custom:
-      source: node_1.py
-      outputs:
-        - latency
+    path: node_1.py
+    outputs:
+      - latency
   - id: node_2
-    custom:
-      source: node_2.py
-      inputs:
-        latency: node_1/latency
+    path: node_2.py
+    inputs:
+      latency: node_1/latency
