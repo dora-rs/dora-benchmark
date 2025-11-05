@@ -3,7 +3,6 @@
 
 import time
 
-
 import pyarrow as pa
 from dora import Node
 from helper import record_results
@@ -25,11 +24,11 @@ while True:
         data = event["value"]
     else:
         break
-    length = len(data) * 8
 
     # frame = np.frombuffer(data, dtype="uint8")
     # frame = cv2.imdecode(frame, -1)
     t_received = time.perf_counter_ns()
+    length = len(data) * 8
     if length != current_size:
         if n > 0:
             record_results(NAME, current_size, latencies)

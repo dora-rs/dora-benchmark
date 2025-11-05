@@ -4,4 +4,4 @@ resolver = "2"
 
 
 [workspace.dependencies]
-dora-node-api = "0.3.8" # { path = "../../../dora/apis/rust/node" }
+dora-node-api = { path = "../../../dora/apis/rust/node" }
