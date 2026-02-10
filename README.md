@@ -9,7 +9,7 @@
 ## If you do not have dora-rs installed
 # sudo apt update && sudo apt-get install wget
 cargo install dora-cli --locked
-pip install dora-rs==0.3.2
+pip install dora-rs
 ## In development, within the dora-node-api-python folder, You can also use:
 ## maturin develop --release
 
