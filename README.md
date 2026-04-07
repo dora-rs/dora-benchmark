@@ -24,7 +24,6 @@ dora start dataflow_op.yml --attach
 cat benchmark_data.csv
 
 ## To test Rust version of dora
-## This requires that dora-rs is placed at: "../../../dora/apis/rust/node"
 cd dora-rs/rs-latency
 cargo build --release --all
 dora start dataflow.yml
