@@ -1,0 +1,7 @@
+[workspace]
+members = ["node", "sink"]
+resolver = "2"
+
+
+[workspace.dependencies]
+adora-node-api = { git = "https://github.com/dora-rs/adora", tag = "v0.2.1" }
