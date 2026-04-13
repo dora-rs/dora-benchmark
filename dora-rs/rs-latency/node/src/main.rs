@@ -9,7 +9,20 @@ fn main() -> eyre::Result<()> {
     let _throughput = DataId::from("throughput".to_owned());
 
     let (mut node, mut events) = DoraNode::init_from_env()?;
-    let sizes = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
+    // 10 sizes from 8 B to 4 MB, in u64 elements (multiply by 8 for bytes)
+    // 8B, 1KB, 10KB, 100KB, 500KB, 1MB, 1.5MB, 2MB, 3MB, 4MB
+    let sizes: [usize; 10] = [
+        1,           // 8 B
+        128,         // 1 KB
+        1280,        // 10 KB
+        12800,       // 100 KB
+        64000,       // 500 KB
+        131072,      // 1 MB
+        196608,      // 1.5 MB
+        262144,      // 2 MB
+        393216,      // 3 MB
+        524288,      // 4 MB
+    ];
 
     // test latency first
     for size in sizes {

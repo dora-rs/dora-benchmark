@@ -13,8 +13,9 @@
 #include "std_msgs/msg/u_int64_multi_array.hpp"
 
 // Match dora-rs/rs-latency sizes (number of uint64 elements).
+// 10 sizes from 8 B to 4 MB (in u64 elements)
 static const std::vector<size_t> SIZES = {
-    1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512};
+    1, 128, 1280, 12800, 64000, 131072, 196608, 262144, 393216, 524288};
 static const int SAMPLES_PER_SIZE = 1000;
 static const auto TICK = std::chrono::milliseconds(20);
 

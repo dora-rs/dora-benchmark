@@ -1,51 +1,58 @@
 # Robotic Dataflow Benchmark
 
 Latency benchmark comparing **dora-rs** and **ROS 2** across Rust, Python, and
-C++ on the same payload sizes (8 B, 40 KB, 400 KB, 4 MB, 40 MB).
+C++ on 10 payload sizes from 8 B to 4 MB.
 
 All results below measured on Linux x86\_64 (Intel Core Ultra 9 285K, 24 cores,
 64 GB RAM, CPU governor `performance`), 1000 samples per size bracket.
 
 ## Results (p50 latency in microseconds, Linux x86\_64)
 
-| Size | dora Rust | dora Python | ROS 2 C++ SHM | ROS 2 C++ | ROS 2 Rust (r2r) | ROS 2 Python |
-|------|-----------|-------------|---------------|-----------|------------------|--------------|
-| 8 B | 389 | 721 | **45** | 154 | 77 | 279 |
-| 40 KB | **222** | 340 | 59 | 173 | 77 | 296 |
-| 400 KB | **257** | 350 | 208 | 240 | 351 | 476 |
-| 4 MB | **715** | 722 | 2261 | 2058 | 3985 | 16773 |
-| 40 MB | **2246** | 2213 | — | — | 50805 | 104037 |
+| Size | dora Rust | dora Python | ROS 2 C++ | ROS 2 Rust (r2r) | ROS 2 Python |
+|------|-----------|-------------|-----------|------------------|--------------|
+| 8 B | 358 | 523 | 166 | **73** | 366 |
+| 1 KB | 339 | 576 | 167 | **73** | 286 |
+| 10 KB | 445 | 677 | 179 | **67** | 292 |
+| 100 KB | 321 | 544 | **183** | 86 | 318 |
+| 500 KB | **268** | 359 | 373 | 375 | 686 |
+| 1 MB | **367** | 439 | 5795 | 795 | 1445 |
+| 1.5 MB | **293** | 659 | 6364 | 1213 | 2303 |
+| 2 MB | **339** | 723 | 6744 | 1658 | 3842 |
+| 3 MB | **404** | 709 | 7672 | 2611 | 8203 |
+| 4 MB | **514** | 851 | 3095 | 3700 | — |
+
+ROS 2 Rust (r2r) uses CycloneDDS + iceoryx shared memory.
+ROS 2 C++ and Python use FastDDS (default middleware).
 
 ### Key findings
 
-- **Small messages (8 B - 40 KB):** ROS 2 C++ with shared memory
-  (CycloneDDS + iceoryx) is fastest at 45-59 µs. ROS 2 Rust (r2r) with
-  SHM is close at 77 µs. dora Rust is 222-389 µs.
-- **Medium messages (400 KB):** dora Rust wins at 257 µs. ROS 2 C++ SHM
-  is 208 µs, r2r SHM is 351 µs.
-- **Large messages (4 MB):** dora is **3× faster** than ROS 2 C++ SHM
-  (715 µs vs 2261 µs) and **5.6× faster** than r2r SHM (3985 µs). All
-  ROS 2 configurations are bottlenecked by CDR serialization.
-- **40 MB:** dora is **22× faster** than the best ROS 2 result (2246 µs
-  vs 50805 µs with r2r). ROS 2 requires slowing the publish rate to
-  200 ms per message for 40 MB to avoid message drops. C++ and Python
-  ROS 2 benchmarks couldn't deliver 40 MB at the default tick rate.
-- **dora Python vs Rust:** Surprisingly close (722 vs 715 µs at 4 MB) because
-  the hot path (Arrow + shared memory) is Rust code in both cases.
+- **Small messages (8 B - 100 KB):** ROS 2 Rust (r2r) with CycloneDDS + iceoryx
+  SHM is fastest at 67-86 µs — constant regardless of size. ROS 2 C++ with
+  FastDDS is 166-183 µs. dora Rust is 321-445 µs.
+- **500 KB:** dora Rust starts winning at 268 µs. ROS 2 r2r and C++ are tied
+  at ~375 µs as CDR serialization begins to dominate.
+- **1 MB+:** dora is **dramatically faster**. At 2 MB: dora Rust 339 µs vs
+  ROS 2 C++ 6744 µs (**20× faster**) and r2r 1658 µs (**5× faster**).
+- **Scaling:** dora latency grows slowly (358 → 514 µs from 8 B to 4 MB)
+  because shared memory transfer is nearly free. ROS 2 latency grows
+  linearly with size due to CDR serialization (~0.8 µs/KB for r2r,
+  ~1.5 µs/KB for C++ FastDDS).
+- **dora Python vs Rust:** Python is 1.5-2× slower than Rust within dora,
+  but still beats all ROS 2 options at 1 MB+ because the hot path
+  (Arrow + shared memory) is the same Rust code.
 - **rclrs vs r2r:** rclrs (ros2\_rust) has a known stack allocation issue
   ([#281](https://github.com/ros2-rust/ros2_rust/issues/281)) that causes
-  stack overflow with messages > 1 MB and 29 ms latency for 4 MB with
-  variable-size types. r2r handles large messages properly on the heap.
+  stack overflow with messages > 1 MB. r2r handles large messages properly.
 
-### Why ROS 2 C++ SHM is slow at 4 MB
+### Why ROS 2 is slow for large messages
 
-Even with CycloneDDS + iceoryx (zero-copy transport) and loaned messages,
-ROS 2 still does CDR serialization/deserialization. We confirmed:
+Even with CycloneDDS + iceoryx (zero-copy transport), ROS 2 still does CDR
+serialization/deserialization. We confirmed:
 
-- `publish()` with loaned messages: **12-15 us** (true zero-copy, constant time)
-- Pure iceoryx (no ROS 2): **79 us** for 4 MB (constant, true zero-copy)
-- Full ROS 2 path with `spin()`: **2261 us** — the CDR deserialization in the
-  subscriber's `take()` call accounts for the overhead
+- `publish()` with loaned messages: **12-15 µs** (true zero-copy, constant)
+- Pure iceoryx (no ROS 2): **79 µs** for 4 MB (constant, true zero-copy)
+- Full ROS 2 path with `spin()`: **2-4 ms** for 4 MB — CDR deserialization
+  in the subscriber's `take()` call accounts for the overhead
 
 dora avoids this by using Apache Arrow format directly in shared memory —
 no serialization layer between publisher and subscriber.
@@ -56,9 +63,8 @@ no serialization layer between publisher and subscriber.
 |------|-----------|----------|------------|---------------|
 | dora Rust | dora-rs 0.5.0 | Rust | dora daemon | Arrow + custom SHM |
 | dora Python | dora-rs 0.5.0 | Python 3.12 | dora daemon | Arrow + custom SHM |
-| ROS 2 C++ SHM | ROS 2 Jazzy | C++ | CycloneDDS + iceoryx | Loaned messages (fixed-size types) |
 | ROS 2 C++ | ROS 2 Jazzy | C++ | FastDDS | No |
-| ROS 2 Rust (r2r) | ROS 2 Jazzy | Rust (r2r 0.9) | CycloneDDS + iceoryx | Via middleware (variable-size types) |
+| ROS 2 Rust (r2r) | ROS 2 Jazzy | Rust (r2r 0.9) | CycloneDDS + iceoryx | Via middleware |
 | ROS 2 Python | ROS 2 Jazzy | Python 3.12 (rclpy) | FastDDS | No |
 
 ---
@@ -88,7 +94,7 @@ cat benchmark_data.csv
 dora destroy
 ```
 
-### ROS 2 C++ (no shared memory)
+### ROS 2 C++
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -97,52 +103,6 @@ colcon build
 source install/setup.sh
 ros2 run cpp_pubsub listener &
 ros2 run cpp_pubsub talker
-cat time.csv
-```
-
-### ROS 2 C++ with shared memory (CycloneDDS + iceoryx)
-
-Requires `ros-jazzy-rmw-cyclonedds-cpp`, `ros-jazzy-iceoryx-posh`, and
-`ros-jazzy-iceoryx-hoofs`.
-
-```bash
-source /opt/ros/jazzy/setup.bash
-cd ros2/cpp_shm_pubsub
-
-# Ensure iceoryx libs are on the path
-export LD_LIBRARY_PATH=/opt/ros/jazzy/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-
-colcon build
-source install/setup.sh
-
-# Start iceoryx RouDi with pre-allocated memory pools
-iox-roudi -c roudi_config.toml &
-sleep 2
-
-# Switch to CycloneDDS with shared memory enabled
-export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export CYCLONEDDS_URI=file://$(pwd)/cyclonedds.xml
-
-ros2 run cpp_shm_pubsub listener &
-ros2 run cpp_shm_pubsub talker
-cat time.csv
-
-pkill iox-roudi
-```
-
-The talker logs `loan=1` for each size bracket when loaned messages (zero-copy
-publish) are active. If you see `loan=0`, the iceoryx mempool chunks are too
-small — increase sizes in `roudi_config.toml`.
-
-### ROS 2 Python
-
-```bash
-source /opt/ros/jazzy/setup.bash
-cd ros2/py_pubsub
-colcon build
-source install/setup.sh
-ros2 run py_pubsub listener &
-ros2 run py_pubsub talker
 cat time.csv
 ```
 
@@ -172,14 +132,43 @@ cat time.csv
 pkill iox-roudi
 ```
 
-Or without SHM (default FastDDS):
+### ROS 2 Python
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd ros2/r2r_pubsub
-./target/release/r2r-benchmark-listener &
-./target/release/r2r-benchmark-talker
+cd ros2/py_pubsub
+colcon build
+source install/setup.sh
+ros2 run py_pubsub listener &
+ros2 run py_pubsub talker
 cat time.csv
+```
+
+### ROS 2 C++ with shared memory (CycloneDDS + iceoryx)
+
+Requires `ros-jazzy-rmw-cyclonedds-cpp`, `ros-jazzy-iceoryx-posh`, and
+`ros-jazzy-iceoryx-hoofs`.
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd ros2/cpp_shm_pubsub
+
+export LD_LIBRARY_PATH=/opt/ros/jazzy/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+colcon build
+source install/setup.sh
+
+iox-roudi -c roudi_config.toml &
+sleep 2
+
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=file://$(pwd)/cyclonedds.xml
+
+ros2 run cpp_shm_pubsub listener &
+ros2 run cpp_shm_pubsub talker
+cat time.csv
+
+pkill iox-roudi
 ```
 
 ## CSV output schema
@@ -190,10 +179,6 @@ All benchmarks write the same CSV columns:
 date, language, platform, name, size_bytes, avg_us, p50_us, p90_us, p99_us, n
 ```
 
-Each row summarises one payload size bracket: average, p50, p90, p99 latency
-(in microseconds) over `n` samples. The benchmarks use 1000 samples per size
-bracket and match payload sizes (8 B, 40 KB, 400 KB, 4 MB, 40 MB).
-
 ## Repository structure
 
 ```
@@ -202,18 +187,9 @@ dora-rs/
   py-latency/          Python dora benchmark (node_1 + node_2)
 
 ros2/
-  cpp_pubsub/          C++ ROS 2 benchmark (FastDDS/CycloneDDS, no SHM)
+  cpp_pubsub/          C++ ROS 2 benchmark (FastDDS, no SHM)
   cpp_shm_pubsub/      C++ ROS 2 benchmark (CycloneDDS + iceoryx SHM)
-    cyclonedds.xml     CycloneDDS shared memory config
-    roudi_config.toml  iceoryx memory pool config
-    msg/               Fixed-size message types for loaned messages
-    src/talker.cpp     Publisher with loaned messages
-    src/listener.cpp   Subscriber with UniquePtr callbacks
-    src/iox_talker.cpp Pure iceoryx talker (no ROS 2)
-    src/iox_listener.cpp Pure iceoryx listener (no ROS 2)
-  py_pubsub/           Python ROS 2 benchmark (rclpy)
   r2r_pubsub/          Rust ROS 2 benchmark (r2r, recommended)
+  py_pubsub/           Python ROS 2 benchmark (rclpy)
   rs_pubsub/           Rust ROS 2 benchmark (rclrs, has stack overflow > 1 MB)
-    build.sh           Colcon workspace build script
-    ros2_benchmark_rs/ rclrs package source
 ```

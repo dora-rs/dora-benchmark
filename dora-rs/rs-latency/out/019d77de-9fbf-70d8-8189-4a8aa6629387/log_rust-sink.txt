@@ -1,0 +1,4 @@
+Input `latency` was closed
+Input `throughput` was closed
+Received unexpected input: Stop(AllInputsClosed)
+finished

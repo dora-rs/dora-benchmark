@@ -7,7 +7,8 @@ import numpy as np
 import pyarrow as pa
 from dora import Node
 
-SIZES = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512]
+# 10 sizes from 8 B to 4 MB (in u64 elements, multiply by 8 for bytes)
+SIZES = [1, 128, 1280, 12800, 64000, 131072, 196608, 262144, 393216, 524288]
 SAMPLES_PER_SIZE = 1000
 
 

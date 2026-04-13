@@ -6,7 +6,8 @@ use r2r::QosProfile;
 use rand::Rng;
 use std::time::Duration;
 
-const SIZES: [usize; 5] = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
+// 10 sizes from 8 B to 4 MB (in u64 elements)
+const SIZES: [usize; 10] = [1, 128, 1280, 12800, 64000, 131072, 196608, 262144, 393216, 524288];
 const SAMPLES: usize = 1000;
 const TICK: Duration = Duration::from_millis(20);
 
@@ -28,14 +29,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for size in SIZES {
         // Use longer tick for large messages to avoid overwhelming DDS.
-        let tick = if size * 8 >= 40_000_000 {
-            Duration::from_millis(200)
-        } else if size * 8 >= 4_000_000 {
-            Duration::from_millis(100)
-        } else {
-            TICK
-        };
-        let n = if size * 8 >= 40_000_000 { 100 } else { SAMPLES };
+        let tick = TICK;
+        let n = SAMPLES;
         eprintln!("Starting {}B bracket (tick={}ms)", size * 8, tick.as_millis());
         for _ in 0..n {
             let mut data: Vec<u64> = (0..size).map(|_| rng.gen()).collect();

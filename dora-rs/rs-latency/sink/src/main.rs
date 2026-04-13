@@ -30,7 +30,7 @@ fn main() -> eyre::Result<()> {
         .expect("Could not extract date from timestamp.");
 
     // Preallocated vector
-    let sizes = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
+    let sizes = [1, 128, 1280, 12800, 64000, 131072, 196608, 262144, 393216, 524288];
     let mut root_vec = HashMap::new();
     for size in sizes {
         root_vec.insert(size, vec![0u64; size]);
