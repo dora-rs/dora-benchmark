@@ -76,6 +76,23 @@ docker run --rm --platform linux/amd64 \
     '
 ```
 
+## CUDA GPU-to-GPU Latency (p50, microseconds)
+
+Measures GPU-to-GPU data transfer latency using CUDA IPC handles. Only the
+64-byte IPC handle traverses the messaging framework -- bulk data stays on GPU.
+
+| Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
+|------|----------|-----------|-------------|----------|-------------|
+| 4 KB | 759 | 656 | 773 | **429** | 623 |
+| 40 KB | 605 | 623 | 731 | **393** | 542 |
+| 400 KB | 641 | 658 | 767 | **320** | 540 |
+| 4 MB | 686 | 699 | 805 | **316** | 513 |
+| 40 MB | 758 | 817 | 961 | **492** | 665 |
+
+All benchmarks use the same raw `cudaIpcGetMemHandle`/`cudaIpcOpenMemHandle`
+calls -- the difference is purely messaging framework overhead for the small
+IPC handle message.
+
 ## Getting started Dora CUDA GPU-to-GPU (Python)
 
 ```bash
