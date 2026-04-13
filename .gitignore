@@ -10,3 +10,4 @@ dora-rs/rs-latency-old/target/
 **/**/log
 **/**/build
 *.txt
+!CMakeLists.txt
