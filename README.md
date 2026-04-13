@@ -76,6 +76,44 @@ docker run --rm --platform linux/amd64 \
     '
 ```
 
+## Getting started Dora CUDA GPU-to-GPU (Python)
+
+```bash
+pip install dora-rs torch numpy tqdm
+cd dora-rs/cuda-latency
+dora up
+dora start cuda_bench.yml --attach
+cat benchmark_data.csv
+```
+
+## Getting started Dora CUDA GPU-to-GPU (Rust)
+
+```bash
+cd dora-rs/cuda-latency-rust/receiver
+cargo build --release
+cd ..
+dora up
+dora start dataflow.yml --attach
+cat time.csv
+```
+
+## Getting started Dora CUDA GPU-to-GPU (C++)
+
+Uses prebuilt dora C++ libraries downloaded automatically from GitHub releases.
+
+Requires: Arrow C++ (`libarrow-dev`), CUDA toolkit, CMake 3.17+.
+
+```bash
+cd dora-rs/cuda-latency-cpp
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+cd ..
+dora up
+dora start dataflow.yml --attach
+cat time.csv
+```
+
 ## Getting started ROS2 CUDA GPU-to-GPU (IPC)
 
 Measures GPU-to-GPU latency using CUDA IPC handles over ROS2, comparable to
