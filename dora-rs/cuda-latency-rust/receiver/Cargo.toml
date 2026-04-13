@@ -1,0 +1,12 @@
+[package]
+name = "cuda-latency-rust-receiver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dora-node-api = { git = "https://github.com/dora-rs/dora", branch = "add-cuda-ipc-examples" }
+eyre = "0.6.8"
+libc = "0.2"
+
+[build-dependencies]
+cc = "1"
