@@ -1,0 +1,7 @@
+[workspace]
+members = ["src/talker", "src/listener"]
+resolver = "2"
+
+[workspace.dependencies]
+r2r = "0.9"
+libc = "0.2"

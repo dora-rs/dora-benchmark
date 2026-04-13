@@ -1,0 +1,10 @@
+[package]
+name = "r2r-benchmark-talker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+r2r = { workspace = true }
+libc = { workspace = true }
+rand = "0.8"
+tokio = { version = "1", features = ["full"] }
