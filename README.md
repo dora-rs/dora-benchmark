@@ -76,6 +76,25 @@ docker run --rm --platform linux/amd64 \
     '
 ```
 
+## Getting started Dora CUDA GPU-to-GPU
+
+Measures GPU-to-GPU latency using Dora's built-in CUDA IPC support
+(`dora.cuda`). Uses numba + PyTorch for zero-copy GPU tensor transfer.
+
+```bash
+pip install dora-rs numba torch tqdm
+
+cd dora-cuda
+dora up
+dora start cuda_bench.yml --attach
+cat benchmark_data.csv
+
+# CPU baseline
+dora up
+dora start cpu_bench.yml --attach
+cat benchmark_data.csv
+```
+
 ## Getting started ROS2 CUDA GPU-to-GPU (IPC)
 
 Measures GPU-to-GPU latency using CUDA IPC handles over ROS2, comparable to
