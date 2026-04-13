@@ -27,8 +27,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rand::thread_rng();
 
     for size in SIZES {
-        eprintln!("Starting {}B bracket", size * 8);
-        for _ in 0..SAMPLES {
+        // Use longer tick for large messages to avoid overwhelming DDS.
+        let tick = if size * 8 >= 40_000_000 {
+            Duration::from_millis(200)
+        } else if size * 8 >= 4_000_000 {
+            Duration::from_millis(100)
+        } else {
+            TICK
+        };
+        let n = if size * 8 >= 40_000_000 { 100 } else { SAMPLES };
+        eprintln!("Starting {}B bracket (tick={}ms)", size * 8, tick.as_millis());
+        for _ in 0..n {
             let mut data: Vec<u64> = (0..size).map(|_| rng.gen()).collect();
             data[0] = clock_monotonic_ns();
 
@@ -41,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 break;
             }
             node.spin_once(Duration::from_millis(0));
-            std::thread::sleep(TICK);
+            std::thread::sleep(tick);
         }
     }
 

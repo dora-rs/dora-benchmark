@@ -88,7 +88,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let latency_us = (t_received.saturating_sub(t_send)) / 1000;
             latencies.push(latency_us);
 
-            if latencies.len() == 1000 {
+            let target = if size_bytes >= 40_000_000 { 90 } else { 990 };
+            if latencies.len() == target {
                 record_results(current_size, &mut latencies, &date);
             }
         }
