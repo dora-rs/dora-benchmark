@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import csv
+import datetime
 import os
 import time
 
@@ -22,32 +23,40 @@ from rclpy.node import Node
 from std_msgs.msg import UInt64MultiArray
 
 LATENCY = True
-
+LANGUAGE = "Python"
 NAME = os.getenv("NAME") or "ROS 2"
 PLATFORM = "COMPUTER_PERF"
-current_size = 8
-n = 0
-latencies = []
-save_x = []
+DATE = datetime.datetime.now().isoformat(timespec="seconds")
 
 
 def record_results(start, current_size, latencies, latency: bool):
+    """Append stats row matching dora-rs timer.csv schema.
 
-    avg_latency = np.array(latencies).mean()
+    Columns: date, language, platform, name, size_bytes,
+             avg_us, p50_us, p90_us, p99_us, n
+    """
+    arr = np.array(latencies)
+    avg_us = int(arr.mean())
+    p50_us = int(np.percentile(arr, 50))
+    p90_us = int(np.percentile(arr, 90))
+    p99_us = int(np.percentile(arr, 99))
+    n = len(latencies)
 
     csv_file = os.getenv("CSV_TIME_FILE", "time.csv")
-    append = os.path.isfile(csv_file)
-    log_header = ["name", "platform", "size", "latency"]
-    log_row = [NAME, PLATFORM, current_size, avg_latency]
-    if append:
-        with open(csv_file, "a", encoding="utf-8") as f:
-            w = csv.writer(f, lineterminator="\n")
-            w.writerow(log_row)
-    else:
-        with open(csv_file, "w+", encoding="utf-8") as f:
-            w = csv.writer(f, lineterminator="\n")
-            w.writerow(log_header)
-            w.writerow(log_row)
+    with open(csv_file, "a", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow([
+            DATE,
+            LANGUAGE,
+            PLATFORM,
+            NAME,
+            current_size,
+            avg_us,
+            p50_us,
+            p90_us,
+            p99_us,
+            n,
+        ])
 
 
 class MinimalSubscriber(Node):
@@ -67,14 +76,13 @@ class MinimalSubscriber(Node):
         length = len(msg.data) * 8  # As it is Uint64
         if length != self.current_size:
             if self.n > 0:
-                record_results([], self.current_size, self.latencies, LATENCY)
+                record_results(None, self.current_size, self.latencies, LATENCY)
             self.current_size = length
             self.n = 0
             self.latencies = []
         t_send = msg.data[0]
-        self.latencies.append((t_received - t_send) / 1000)
+        self.latencies.append((t_received - t_send) / 1000)  # ns -> us
         self.n += 1
-        # self.get_logger().info('I heard: "%s"' % msg.data)
 
 
 def main(args=None):

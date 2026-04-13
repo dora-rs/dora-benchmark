@@ -1,0 +1,15 @@
+nodes:
+  - id: rust-node
+    build: cargo build -p benchmark-example-node --release
+    path: ./target/release/benchmark-example-node
+    inputs:
+      tick: dora/timer/millis/20
+    outputs:
+      - latency
+      - throughput
+  - id: rust-sink
+    build: cargo build -p benchmark-example-sink --release
+    path: ./target/release/benchmark-example-sink
+    inputs:
+      latency: rust-node/latency
+      throughput: rust-node/throughput

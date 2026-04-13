@@ -1,7 +1,6 @@
 use dora_node_api::Event;
 use dora_node_api::{self, arrow::array::UInt64Array, dora_core::config::DataId, DoraNode};
 use rand::Rng;
-use std::time::Duration;
 use uhlc::system_time_clock;
 
 fn main() -> eyre::Result<()> {

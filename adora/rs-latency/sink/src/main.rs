@@ -10,7 +10,7 @@ use uhlc::HLC;
 
 static LANGUAGE: &str = "Rust";
 static PLATFORM: &str = "i7-8750@2.20GHz";
-static NAME: &str = "dora-rs daemon Rust";
+static NAME: &str = "adora daemon Rust";
 
 fn main() -> eyre::Result<()> {
     let (_node, mut events) = DoraNode::init_from_env()?;
@@ -50,15 +50,6 @@ fn main() -> eyre::Result<()> {
                 let time_u64 = array.get(0).context("could not slice data")?;
                 let t_send = uhlc::NTP64(*time_u64);
 
-                // .to_vec() Data Latency
-                // let _owned_data = array.to_vec();
-
-                // Preallocated data
-                // let _ = root_vec
-                // .get_mut(&data.len())
-                // .unwrap()
-                // .copy_from_slice(array);
-
                 let t_received = system_time_clock();
 
                 latencies.push((t_received - t_send).to_duration());
@@ -81,7 +72,9 @@ fn main() -> eyre::Result<()> {
         }
     }
 
-    record_results(start, current_size, n, latencies, latency, date);
+    if n > 0 {
+        record_results(start, current_size, n, latencies, latency, date);
+    }
     println!("finished");
     Ok(())
 }
