@@ -14,7 +14,7 @@ All results below measured on Linux x86\_64 (Intel Core Ultra 9 285K, 24 cores,
 | 40 KB | **222** | 340 | 59 | 173 | 77 | 296 |
 | 400 KB | **257** | 350 | 208 | 240 | 351 | 476 |
 | 4 MB | **715** | 722 | 2261 | 2058 | 3985 | 16773 |
-| 40 MB | **2246** | 2213 | — | — | — | 104037 |
+| 40 MB | **2246** | 2213 | — | — | — | — |
 
 ### Key findings
 
@@ -26,8 +26,10 @@ All results below measured on Linux x86\_64 (Intel Core Ultra 9 285K, 24 cores,
 - **Large messages (4 MB):** dora is **3× faster** than ROS 2 C++ SHM
   (715 µs vs 2261 µs) and **5.6× faster** than r2r SHM (3985 µs). All
   ROS 2 configurations are bottlenecked by CDR serialization.
-- **40 MB:** Only dora can handle this size. All ROS 2 configurations either
-  hang (DDS can't push 40 MB at 50 Hz) or take 100+ ms.
+- **40 MB:** Only dora can handle this size. All ROS 2 configurations
+  (C++, Rust, Python) fail to deliver 40 MB messages — the publisher
+  succeeds but the subscriber never receives them. This is a fundamental
+  DDS limitation for very large variable-size messages.
 - **dora Python vs Rust:** Surprisingly close (722 vs 715 µs at 4 MB) because
   the hot path (Arrow + shared memory) is Rust code in both cases.
 - **rclrs vs r2r:** rclrs (ros2\_rust) has a known stack allocation issue

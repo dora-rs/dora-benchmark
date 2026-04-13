@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             tokio::task::yield_now().await;
 
             if let Some(last) = *last_msg.lock().unwrap() {
-                if last.elapsed() > Duration::from_secs(5) {
+                if last.elapsed() > Duration::from_secs(30) {
                     break;
                 }
             }

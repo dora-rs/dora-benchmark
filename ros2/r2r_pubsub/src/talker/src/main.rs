@@ -36,7 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 layout: Default::default(),
                 data,
             };
-            publisher.publish(&msg)?;
+            if let Err(e) = publisher.publish(&msg) {
+                eprintln!("publish failed for {}B: {:?}", size * 8, e);
+                break;
+            }
             node.spin_once(Duration::from_millis(0));
             std::thread::sleep(TICK);
         }
