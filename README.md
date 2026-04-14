@@ -83,11 +83,17 @@ Measures GPU-to-GPU data transfer latency using CUDA IPC handles. Only the
 
 | Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
 |------|----------|-----------|-------------|----------|-------------|
-| 4 KB | 759 | 656 | 773 | **429** | 623 |
-| 40 KB | 605 | 623 | 731 | **393** | 542 |
-| 400 KB | 641 | 658 | 767 | **320** | 540 |
-| 4 MB | 686 | 699 | 805 | **316** | 513 |
-| 40 MB | 758 | 817 | 961 | **492** | 665 |
+| 4 KB | 704 | **357** | 443 | 429 | 623 |
+| 40 KB | 648 | **378** | 460 | 393 | 542 |
+| 400 KB | 833 | **406** | 416 | **320** | 540 |
+| 4 MB | 680 | 464 | 535 | **316** | 513 |
+| 40 MB | 732 | 527 | 559 | **492** | 665 |
+
+Dora Python/Rust results use the new direct node-to-node TCP communication
+pattern for small messages
+([dora-rs/dora#1621](https://github.com/dora-rs/dora/pull/1621)), which
+bypasses the daemon for tiny metadata messages. This cut Python latency
+from ~770us to ~440us and Rust from ~650us to ~380us.
 
 All benchmarks use the same raw `cudaIpcGetMemHandle`/`cudaIpcOpenMemHandle`
 calls -- the difference is purely messaging framework overhead for the small
