@@ -92,69 +92,75 @@ Dora benchmarks use the direct node-to-node TCP optimization
 
 | Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
 |------|----------|-----------|-------------|----------|-------------|
-| 8 B | 282 | **175** | 306 | 370 | 422 |
-| 64 B | 283 | **247** | 323 | 341 | 311 |
-| 512 B | 264 | 263 | **237** | 336 | 281 |
-| 4 KB | 358 | **254** | 304 | 330 | 316 |
-| 40 KB | 360 | 343 | **219** | 249 | 354 |
-| 400 KB | 288 | 378 | **222** | 227 | 418 |
-| 4 MB | 305 | 388 | 247 | **236** | 442 |
-| 40 MB | 412 | 326 | 406 | **223** | 416 |
+| 8 B | 236 | **173** | 320 | 256 | 436 |
+| 64 B | 201 | **174** | 219 | 289 | 425 |
+| 512 B | 248 | **181** | 252 | 369 | 452 |
+| 4 KB | **164** | 170 | 277 | 260 | 456 |
+| 40 KB | 202 | **141** | 339 | 327 | 320 |
+| 400 KB | 202 | 242 | 306 | **177** | 288 |
+| 4 MB | 290 | 263 | 318 | **207** | 346 |
+| 40 MB | 269 | **265** | 500 | 316 | 510 |
 
 ### p90 latency (microseconds)
 
 | Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
 |------|----------|-----------|-------------|----------|-------------|
-| 8 B | 321 | **236** | 392 | 424 | 491 |
-| 64 B | 323 | **311** | 443 | 411 | 379 |
-| 512 B | 378 | 332 | **329** | 394 | 380 |
-| 4 KB | 408 | **363** | 346 | 402 | 457 |
-| 40 KB | 405 | 411 | **263** | 347 | 465 |
-| 400 KB | 358 | 425 | **271** | 308 | 468 |
-| 4 MB | 346 | 440 | 291 | **346** | 491 |
-| 40 MB | 496 | 484 | 460 | **329** | 488 |
+| 8 B | 374 | **220** | 423 | 353 | 489 |
+| 64 B | 351 | **212** | 307 | 411 | 499 |
+| 512 B | 305 | **306** | 325 | 413 | 533 |
+| 4 KB | 280 | **226** | 402 | 363 | 515 |
+| 40 KB | 362 | **211** | 436 | 398 | 411 |
+| 400 KB | 303 | 353 | 365 | **252** | 339 |
+| 4 MB | 371 | 399 | 401 | **276** | 395 |
+| 40 MB | 310 | **308** | 648 | 516 | 692 |
 
 ### p99 latency (microseconds)
 
 | Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
 |------|----------|-----------|-------------|----------|-------------|
-| 8 B | 381 | **353** | 457 | 483 | 546 |
-| 64 B | 389 | **373** | 513 | 485 | 460 |
-| 512 B | 443 | 389 | **394** | 450 | 456 |
-| 4 KB | 458 | 445 | **409** | 452 | 518 |
-| 40 KB | 463 | 462 | **339** | 405 | 525 |
-| 400 KB | 436 | 470 | **322** | 389 | 519 |
-| 4 MB | 405 | 497 | **339** | 430 | 535 |
-| 40 MB | 548 | 573 | 510 | **414** | 587 |
+| 8 B | 458 | **280** | 489 | 416 | 534 |
+| 64 B | 439 | **260** | 358 | 468 | 582 |
+| 512 B | 387 | **376** | 385 | 457 | 601 |
+| 4 KB | 347 | **324** | 461 | 421 | 580 |
+| 40 KB | 435 | **328** | 484 | 460 | 493 |
+| 400 KB | 388 | 434 | 415 | **320** | 383 |
+| 4 MB | 470 | 459 | 491 | **343** | 454 |
+| 40 MB | 372 | **384** | 725 | 583 | 762 |
 
 ### Framework comparison — range analysis
 
 Across all 8 size brackets (p50):
 
-| Framework | min | max | mean | range |
-|-----------|-----|-----|------|-------|
-| Dora C++ | 264 | 412 | 319 | [264–412] |
-| Dora Rust | 175 | 388 | 296 | [175–388] |
-| Dora Python | 219 | 406 | 283 | [219–406] |
-| ROS2 C++ | 223 | 370 | 289 | [223–370] |
-| ROS2 Python | 281 | 442 | 370 | [281–442] |
+| Framework | min | max | mean |
+|-----------|-----|-----|------|
+| Dora Rust | **141** | **265** | **201** |
+| Dora C++ | 164 | 290 | 226 |
+| ROS2 C++ | 177 | 369 | 275 |
+| Dora Python | 219 | 500 | 316 |
+| ROS2 Python | 288 | 510 | 404 |
 
-All 5 frameworks overlap in [281–370] µs — size variation within a single
-framework is larger than the cross-framework difference at a fixed size.
-For GPU-to-GPU CUDA IPC (where only a 64-byte handle crosses the framework),
-**framework choice barely matters**; ROS2 Python is the only consistently
-slower outlier (~45-80 µs slower than Dora Python on average).
+**Dora Rust is consistently fastest** for GPU-to-GPU CUDA IPC (mean 201 µs,
+25–35% faster than ROS2 C++). Dora C++ comes second. Dora Python beats ROS2
+Python by ~90 µs on average.
+
+Range overlap: **4 of 5 frameworks** (everything except ROS2 Python) overlap
+in the [219–265] µs window. ROS2 Python is the only outlier on the slow
+side — its minimum (288 µs) is already above Dora Rust's maximum (265 µs).
 
 ### Notes
 
-- **Dora now uses Unix domain sockets** for local IPC
-  ([dora-rs/dora#1622](https://github.com/dora-rs/dora/pulls?q=unix-domain-sockets))
-  — this shaved ~70 µs off Dora Python and ~20 µs off Dora Rust (vs TCP).
+- **Dora uses Unix domain sockets** for local IPC
+  ([dora-rs/dora#1622](https://github.com/dora-rs/dora/pulls?q=unix-domain-sockets)).
+- **Dora benchmarks use `dora run <yaml>`** (fresh coordinator/daemon per run)
+  instead of long-lived `dora up`. We observed that leftover state in a
+  persistent daemon systematically slowed Dora Rust by ~100 µs per size
+  bracket. Always use `dora run` for benchmarks.
 - **Dora C++ receiver uses `event_as_input`** (raw uint8 payload) instead of
   Arrow C-Data Interface to avoid FFI overhead. Sender packs
   `[timestamp][num_elements][ipc_handle]` into a single 80-byte uint8 array.
-- **ROS2 C++ p50 is lowest at large sizes** — FastDDS has very low per-message
-  overhead on the steady-state path.
+- **ROS2 C++ p50 is lowest at 400KB–4MB** — FastDDS has very low per-message
+  overhead on the steady-state path, but it has higher cold-start jitter at
+  tiny sizes.
 - **Noise is real** — single-digit percent variance between runs; exact p50
   ordering shifts between runs, especially at the 8B–512B boundary.
 
