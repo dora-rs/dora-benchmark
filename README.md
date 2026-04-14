@@ -147,6 +147,34 @@ Range overlap: **4 of 5 frameworks** (everything except ROS2 Python) overlap
 in the [219–265] µs window. ROS2 Python is the only outlier on the slow
 side — its minimum (288 µs) is already above Dora Rust's maximum (265 µs).
 
+### CPU benchmark (same machine, for reference)
+
+Same machine, same date, but moving actual bulk data through the framework
+instead of just a CUDA IPC handle. This is where framework choice *actually*
+matters. Values below are average latency in µs per message.
+
+| Size | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
+|------|-----------|-------------|----------|-------------|
+| 8 B | 220 | — | 277 | — |
+| 64 B | — | 330 | — | 423 |
+| 512 B | — | 269 | — | 441 |
+| 4 KB | — | 516 | — | 457 |
+| 40 KB | 529 | 500 | **319** | 432 |
+| 400 KB | 390 | 603 | **385** | 1134 |
+| 4 MB | **800** | 957 | 11724 | 26256 |
+| 40 MB | **2505** | 3177 | did not finish | 119902 |
+
+Compare to the CUDA IPC table above: at 40 MB, **Dora Rust CPU is 2505 µs vs
+Dora Rust CUDA IPC at 265 µs** — roughly 10× slower when the actual data
+travels. Meanwhile ROS2 Python at 40 MB is 119,902 µs (~120 ms!) on the CPU
+path — FastDDS with the default CDR serialization hits a wall on large
+variable-size arrays. ROS2 C++ couldn't keep up with the default publish
+rate at 40 MB.
+
+**Takeaway:** framework differences are dramatic for bulk data on CPU
+(1 − 50× between Dora and ROS2 at large sizes) and negligible for GPU-to-GPU
+via CUDA IPC (everyone's within ~100 µs). Use CUDA IPC when you can.
+
 ### Notes
 
 - **Dora uses Unix domain sockets** for local IPC

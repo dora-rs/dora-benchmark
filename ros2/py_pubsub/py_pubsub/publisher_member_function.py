@@ -46,7 +46,7 @@ class MinimalPublisher(Node):
             np.random.randint(255, size=SIZES[self.i], dtype=np.uint64)
         )
 
-        random_data[0] = np.array([time.perf_counter_ns()])
+        random_data[0] = np.uint64(time.perf_counter_ns())
 
         random_data = (
             random_data.tobytes()

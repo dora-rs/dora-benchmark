@@ -4,4 +4,4 @@ resolver = "2"
 
 
 [workspace.dependencies]
-dora-node-api = "0.5.0"
+dora-node-api = { git = "https://github.com/dora-rs/dora", branch = "feat/unix-domain-sockets" }
