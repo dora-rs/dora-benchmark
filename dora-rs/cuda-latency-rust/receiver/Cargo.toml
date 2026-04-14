@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dora-node-api = { git = "https://github.com/dora-rs/dora", branch = "add-cuda-ipc-examples" }
+dora-node-api = { git = "https://github.com/dora-rs/dora", branch = "feat/unix-domain-sockets" }
 eyre = "0.6.8"
 libc = "0.2"
 

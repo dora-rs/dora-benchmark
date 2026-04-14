@@ -41,4 +41,7 @@ target_link_libraries(receiver
     pthread
     dl
     rt
+    z
+    ssl
+    crypto
 )
