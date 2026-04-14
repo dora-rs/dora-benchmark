@@ -20,14 +20,14 @@ from rclpy.node import Node
 from std_msgs.msg import UInt64MultiArray
 
 SIZES = [
+    1,
     8,
     64,
     512,
-    10 * 512,
-    100 * 512,
-    1000 * 512,
-    10000 * 512,
-    8,
+    5120,
+    51200,
+    512000,
+    5120000,
 ]
 
 
@@ -41,6 +41,8 @@ class MinimalPublisher(Node):
         self.j = 0
 
     def timer_callback(self):
+        if self.i >= len(SIZES):
+            return
         msg = UInt64MultiArray()
         random_data = np.array(
             np.random.randint(255, size=SIZES[self.i], dtype=np.uint64)
@@ -48,13 +50,10 @@ class MinimalPublisher(Node):
 
         random_data[0] = np.uint64(time.perf_counter_ns())
 
-        random_data = (
-            random_data.tobytes()
-        )  # <- Converting to bytes is required as there is no easy way to pass the memoryview to ROS2 Messages
+        random_data = random_data.tobytes()
         msg.data.frombytes(random_data)
         self.publisher_.publish(msg)
-        # self.get_logger().info('Publishing: "%s"' % msg.data)
-        if self.j == 100:
+        if self.j == 1000:
             self.i += 1
             self.j = 0
         else:

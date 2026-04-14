@@ -14,7 +14,7 @@
 
 // Match dora-rs/rs-latency sizes (number of uint64 elements).
 static const std::vector<size_t> SIZES = {
-    1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512};
+    1, 8, 64, 512, 5120, 51200, 512000, 5120000};
 static const int SAMPLES_PER_SIZE = 1000;
 static const auto TICK = std::chrono::milliseconds(20);
 

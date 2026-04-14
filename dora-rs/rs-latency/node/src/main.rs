@@ -9,7 +9,7 @@ fn main() -> eyre::Result<()> {
     let _throughput = DataId::from("throughput".to_owned());
 
     let (mut node, mut events) = DoraNode::init_from_env()?;
-    let sizes = [1, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512];
+    let sizes = [1, 8, 64, 512, 5120, 51200, 512000, 5120000];
 
     // test latency first
     for size in sizes {
