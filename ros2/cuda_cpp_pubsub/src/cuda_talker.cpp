@@ -20,8 +20,8 @@
 #include "std_msgs/msg/u_int8_multi_array.hpp"
 
 // Match Dora cuda-latency sizes: number of int64 elements.
-static const std::vector<size_t> SIZES = {512, 5120, 51200, 512000, 5120000};
-static const int SAMPLES_PER_SIZE = 100;
+static const std::vector<size_t> SIZES = {1, 8, 64, 512, 5120, 51200, 512000, 5120000};
+static const int SAMPLES_PER_SIZE = 1000;
 static const int WARMUP_SAMPLES = 10;
 static const size_t ELEMENT_SIZE = 8;  // sizeof(int64_t)
 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
         ack_received = false;
       }
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 
     // Free GPU buffer after the bracket completes.

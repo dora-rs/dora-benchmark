@@ -8,7 +8,7 @@ add_compile_options(-Wall -O2)
 set(DORA_CPP_VERSION "v0.0.0-test-pr-1611-v2" CACHE STRING "Dora C++ release tag")
 set(DORA_CPP_ARCHIVE "dora-cpp-libraries-x86_64-unknown-linux-gnu.tar.gz")
 set(DORA_CPP_URL "https://github.com/dora-rs/dora/releases/download/${DORA_CPP_VERSION}/${DORA_CPP_ARCHIVE}")
-set(DORA_CPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/dora-cpp-libraries-x86_64-unknown-linux-gnu")
+set(DORA_CPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/dora-cpp-libraries-x86_64-unknown-linux-gnu" CACHE PATH "Path to dora C++ libraries (set via -DDORA_CPP_DIR=... to use a local build)")
 
 if(NOT EXISTS "${DORA_CPP_DIR}")
     message(STATUS "Downloading dora C++ libraries from ${DORA_CPP_URL}")
@@ -24,7 +24,6 @@ if(NOT EXISTS "${DORA_CPP_DIR}")
     )
 endif()
 
-find_package(Arrow REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
 add_executable(receiver
@@ -38,7 +37,6 @@ target_include_directories(receiver PRIVATE
 
 target_link_libraries(receiver
     ${DORA_CPP_DIR}/lib/libdora_node_api_cxx.a
-    Arrow::arrow_shared
     CUDA::cudart
     pthread
     dl

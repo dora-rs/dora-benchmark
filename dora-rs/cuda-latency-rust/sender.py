@@ -42,7 +42,10 @@ _cudaMemcpyDeviceToHost = 2
 
 # ---------------------------------------------------------------------------
 
-SIZES = [512, 10 * 512, 100 * 512, 1000 * 512, 10000 * 512]
+# Sizes as number of int64 elements. Adds more granularity at the small end.
+SIZES = [1, 8, 64, 512, 5120, 51200, 512000, 5120000]
+SAMPLES_PER_SIZE = 1000
+INTER_SEND_SLEEP = 0.005  # 5 ms
 ELEMENT_SIZE = 8  # int64
 
 DEVICE = os.getenv("DEVICE", "cuda")
@@ -66,7 +69,7 @@ for size in SIZES:
     d_ptr = ctypes.c_void_p()
     _libcudart.cudaMalloc(ctypes.byref(d_ptr), byte_size)
 
-    for _ in range(100):
+    for _ in range(SAMPLES_PER_SIZE):
         _libcudart.cudaMemcpy(
             d_ptr, ctypes.c_char_p(host_bytes), byte_size, _cudaMemcpyHostToDevice,
         )
@@ -100,6 +103,6 @@ for size in SIZES:
             )
 
         node.next()
-        time.sleep(0.05)
+        time.sleep(INTER_SEND_SLEEP)
 
     _libcudart.cudaFree(d_ptr)

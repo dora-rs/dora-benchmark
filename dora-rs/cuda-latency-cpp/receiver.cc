@@ -1,15 +1,14 @@
-// Dora C++ CUDA IPC benchmark receiver.
-// Uses raw CUDA runtime API (cudaIpcOpenMemHandle) and dora C++ node API.
+// Dora C++ CUDA IPC benchmark receiver — non-Arrow path.
+// Uses `event_as_input` to get the raw uint8 payload directly (no Arrow FFI).
+// Payload layout: [timestamp_ns (i64)][num_elements (i64)][ipc_handle (64B)]
 
 #include "dora-node-api.h"
 
-#include <arrow/api.h>
-#include <arrow/c/bridge.h>
 #include <cuda_runtime_api.h>
 
 #include <algorithm>
 #include <chrono>
-#include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -25,42 +24,15 @@ static uint64_t clock_monotonic_ns() {
            static_cast<uint64_t>(ts.tv_nsec);
 }
 
-// Arrow FFI helper from upstream example.
-struct ArrowInput {
-    std::shared_ptr<arrow::Array> array;
-    std::string id;
-    rust::cxxbridge1::Box<Metadata> metadata;
-};
-
-ArrowInput receive_arrow(rust::cxxbridge1::Box<DoraEvent> event) {
-    struct ArrowArray c_array;
-    struct ArrowSchema c_schema;
-    auto info = event_as_arrow_input_with_info(
-        std::move(event),
-        reinterpret_cast<uint8_t *>(&c_array),
-        reinterpret_cast<uint8_t *>(&c_schema));
-    if (!info.error.empty()) {
-        return {nullptr, "", std::move(info.metadata)};
-    }
-    auto result = arrow::ImportArray(&c_array, &c_schema);
-    if (!result.ok()) {
-        return {nullptr, "", std::move(info.metadata)};
-    }
-    return {result.MoveValueUnsafe(), std::string(info.id), std::move(info.metadata)};
-}
-
 int main() {
     auto dora_node = init_dora_node();
     auto id = std::string(node_id(dora_node.send_output));
 
-    // Init CUDA.
     cudaSetDevice(0);
     cudaFree(nullptr);
     std::cerr << "[" << id << "] CUDA context ready" << std::endl;
 
-    // Build empty array for ACK.
-    arrow::Int8Builder builder;
-    auto empty_arr = builder.Finish().ValueOrDie();
+    std::vector<uint8_t> ack_payload(1, 0);
 
     std::map<int64_t, std::vector<uint64_t>> latencies;
     std::map<int64_t, int> warmup;
@@ -73,53 +45,44 @@ int main() {
         if (ty != DoraEventType::Input)
             continue;
 
-        auto input = receive_arrow(std::move(event));
-        if (!input.array || input.id != "cuda_data")
+        DoraInput input = event_as_input(std::move(event));
+        if (std::string(input.id) != "cuda_data")
             continue;
 
-        int64_t t_send = input.metadata->get_int("time");
-        int64_t num_elements = input.metadata->get_int("num_elements");
-        int64_t size_bytes = num_elements * 8;
+        const uint8_t *data = input.data.data();
+        if (input.data.size() < 80) {
+            std::cerr << "unexpected payload size: " << input.data.size() << std::endl;
+            continue;
+        }
 
-        // Extract 64-byte IPC handle from Int8Array.
-        auto int8_array = std::static_pointer_cast<arrow::Int8Array>(input.array);
-        const int8_t *raw = int8_array->raw_values();
+        int64_t t_send;
+        int64_t num_elements;
+        std::memcpy(&t_send, data, sizeof(int64_t));
+        std::memcpy(&num_elements, data + 8, sizeof(int64_t));
 
         cudaIpcMemHandle_t handle;
-        std::memcpy(&handle, raw, 64);
+        std::memcpy(&handle, data + 16, 64);
 
         void *d_ptr = nullptr;
-        cudaError_t err = cudaIpcOpenMemHandle(&d_ptr, handle,
-                                                cudaIpcMemLazyEnablePeerAccess);
+        cudaError_t err = cudaIpcOpenMemHandle(
+            &d_ptr, handle, cudaIpcMemLazyEnablePeerAccess);
         if (err != cudaSuccess) {
             std::cerr << "cudaIpcOpenMemHandle failed: " << cudaGetErrorString(err)
                       << std::endl;
-            // Send ACK anyway.
-            struct ArrowArray c_a;
-            struct ArrowSchema c_s;
-            arrow::ExportArray(*empty_arr, &c_a, &c_s);
-            send_arrow_output(dora_node.send_output, "next",
-                              reinterpret_cast<uint8_t *>(&c_a),
-                              reinterpret_cast<uint8_t *>(&c_s),
-                              new_metadata());
+            send_output(
+                dora_node.send_output, "next",
+                rust::Slice<const uint8_t>(ack_payload.data(), ack_payload.size()));
             continue;
         }
         cudaDeviceSynchronize();
         uint64_t t_received = clock_monotonic_ns();
         cudaIpcCloseMemHandle(d_ptr);
 
-        // Send ACK.
-        {
-            struct ArrowArray c_a;
-            struct ArrowSchema c_s;
-            arrow::ExportArray(*empty_arr, &c_a, &c_s);
-            send_arrow_output(dora_node.send_output, "next",
-                              reinterpret_cast<uint8_t *>(&c_a),
-                              reinterpret_cast<uint8_t *>(&c_s),
-                              new_metadata());
-        }
+        send_output(
+            dora_node.send_output, "next",
+            rust::Slice<const uint8_t>(ack_payload.data(), ack_payload.size()));
 
-        // Record latency.
+        int64_t size_bytes = num_elements * 8;
         auto &wc = warmup[size_bytes];
         if (wc < WARMUP_SAMPLES) {
             wc++;
@@ -129,7 +92,6 @@ int main() {
         latencies[size_bytes].push_back(lat_us);
     }
 
-    // Write CSV.
     const char *csv_env = std::getenv("CSV_TIME_FILE");
     std::string csv_path = csv_env ? csv_env : "time.csv";
     std::ofstream f(csv_path, std::ios::app);
@@ -148,7 +110,6 @@ int main() {
         std::cerr << "size=" << sz << "  avg=" << avg << "us  p50=" << p50
                   << "us  p90=" << p90 << "us  p99=" << p99 << "us  n=" << n
                   << std::endl;
-
         f << "C++,COMPUTER_PERF,dora C++ CUDA IPC," << sz << "," << avg << ","
           << p50 << "," << p90 << "," << p99 << "," << n << "\n";
     }

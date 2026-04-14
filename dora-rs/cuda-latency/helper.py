@@ -19,21 +19,21 @@ LOG_HEADER = [
     "Platform",
     "Name",
     "Size (bit)",
-    "Latency (ns)",
-    "Q1 lat (ns)",
-    "Med lat (ns)",
-    "Q3 (ns)",
+    "avg (us)",
+    "p50 (us)",
+    "p90 (us)",
+    "p99 (us)",
+    "n",
 ]
 
 
 def record_results(name, current_size, latencies):
-
-    avg_latency = np.array(latencies).mean()
-
-    # Calculate Q1 (25th percentile), median (50th percentile), and Q3 (75th percentile)
-    q1 = np.percentile(latencies, 25)
-    median = np.percentile(latencies, 50)  # Alternatively, np.median(data)
-    q3 = np.percentile(latencies, 75)
+    arr = np.array(latencies)
+    avg = int(arr.mean())
+    p50 = int(np.percentile(arr, 50))
+    p90 = int(np.percentile(arr, 90))
+    p99 = int(np.percentile(arr, 99))
+    n = len(latencies)
 
     csv_file = os.getenv("CSV_TIME_FILE", "benchmark_data.csv")
     append = os.path.isfile(csv_file)
@@ -44,10 +44,11 @@ def record_results(name, current_size, latencies):
         PLATFORM,
         name,
         current_size,
-        int(avg_latency),
-        int(q1),
-        int(median),
-        int(q3),
+        avg,
+        p50,
+        p90,
+        p99,
+        n,
     ]
     if append:
         with open(csv_file, "a", encoding="utf-8") as f:
@@ -58,3 +59,8 @@ def record_results(name, current_size, latencies):
             w = csv.writer(f, lineterminator="\n")
             w.writerow(LOG_HEADER)
             w.writerow(log_row)
+
+    print(
+        f"size={current_size}  avg={avg}us  p50={p50}us  "
+        f"p90={p90}us  p99={p99}us  n={n}"
+    )

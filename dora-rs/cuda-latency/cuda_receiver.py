@@ -50,7 +50,7 @@ _libcudart.cudaSetDevice(0)
 _libcudart.cudaFree(ctypes.c_void_p(0))
 
 pa.array([])
-pbar = tqdm(total=100)
+pbar = tqdm(total=1000)
 node = Node("node_2")
 
 current_size = 8
@@ -96,7 +96,7 @@ while True:
     if length != current_size:
         if n > 0:
             pbar.close()
-            pbar = tqdm(total=100)
+            pbar = tqdm(total=1000)
             record_results(NAME, current_size, latencies)
         current_size = length
         n = 0

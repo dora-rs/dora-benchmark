@@ -76,28 +76,66 @@ docker run --rm --platform linux/amd64 \
     '
 ```
 
-## CUDA GPU-to-GPU Latency (p50, microseconds)
+## CUDA GPU-to-GPU Latency
 
 Measures GPU-to-GPU data transfer latency using CUDA IPC handles. Only the
-64-byte IPC handle traverses the messaging framework -- bulk data stays on GPU.
+64-byte IPC handle traverses the messaging framework -- bulk data stays on
+GPU. All five configurations use identical raw
+`cudaIpcGetMemHandle` / `cudaIpcOpenMemHandle` calls, so the differences
+reflect messaging-framework overhead.
+
+1000 samples per size, 10 warmup iterations discarded, 5 ms inter-send delay.
+Dora benchmarks use the direct node-to-node TCP optimization
+([dora-rs/dora#1621](https://github.com/dora-rs/dora/pull/1621)).
+
+### p50 latency (microseconds)
 
 | Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
 |------|----------|-----------|-------------|----------|-------------|
-| 4 KB | 704 | **357** | 443 | 429 | 623 |
-| 40 KB | 648 | **378** | 460 | 393 | 542 |
-| 400 KB | 833 | **406** | 416 | **320** | 540 |
-| 4 MB | 680 | 464 | 535 | **316** | 513 |
-| 40 MB | 732 | 527 | 559 | **492** | 665 |
+| 8 B | 282 | 383 | 345 | **252** | 269 |
+| 64 B | **190** | 322 | 278 | 251 | 352 |
+| 512 B | 270 | 273 | 270 | 337 | 417 |
+| 4 KB | 355 | **197** | 421 | 326 | 436 |
+| 40 KB | 383 | 290 | 386 | **245** | 452 |
+| 400 KB | 366 | 319 | 370 | **224** | 427 |
+| 4 MB | 377 | 392 | 392 | **239** | 465 |
+| 40 MB | 355 | 379 | 388 | **286** | 391 |
 
-Dora Python/Rust results use the new direct node-to-node TCP communication
-pattern for small messages
-([dora-rs/dora#1621](https://github.com/dora-rs/dora/pull/1621)), which
-bypasses the daemon for tiny metadata messages. This cut Python latency
-from ~770us to ~440us and Rust from ~650us to ~380us.
+### p90 latency (microseconds)
 
-All benchmarks use the same raw `cudaIpcGetMemHandle`/`cudaIpcOpenMemHandle`
-calls -- the difference is purely messaging framework overhead for the small
-IPC handle message.
+| Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
+|------|----------|-----------|-------------|----------|-------------|
+| 8 B | 333 | 437 | 454 | **338** | 411 |
+| 64 B | **276** | 398 | 346 | 334 | 420 |
+| 512 B | **312** | 322 | 415 | 437 | 491 |
+| 4 KB | 437 | **286** | 503 | 400 | 514 |
+| 40 KB | 435 | 393 | 475 | **298** | 510 |
+| 400 KB | 418 | 393 | 409 | **336** | 478 |
+| 4 MB | 424 | 445 | 433 | **313** | 511 |
+| 40 MB | 412 | 443 | 554 | **373** | 569 |
+
+### p99 latency (microseconds)
+
+| Size | Dora C++ | Dora Rust | Dora Python | ROS2 C++ | ROS2 Python |
+|------|----------|-----------|-------------|----------|-------------|
+| 8 B | 414 | 480 | 536 | **405** | 467 |
+| 64 B | **326** | 463 | 397 | 412 | 476 |
+| 512 B | **358** | 374 | 517 | 496 | 576 |
+| 4 KB | 489 | **352** | 566 | 462 | 588 |
+| 40 KB | 480 | 481 | 549 | **342** | 552 |
+| 400 KB | 466 | 451 | 463 | **429** | 540 |
+| 4 MB | 480 | 498 | 480 | **361** | 565 |
+| 40 MB | 458 | 607 | 641 | **445** | 684 |
+
+### Notes
+
+- **ROS2 C++ wins most mid/large sizes** — FastDDS has very low fixed
+  overhead for tiny published messages.
+- **Dora C++ is now competitive** with Rust after switching to
+  `event_as_input` (raw uint8 payload, no Arrow C-Data Interface FFI).
+- **Dora Rust wins 4 KB** and is very close to ROS2 C++ at large sizes.
+- **Noise is real** — single-digit percent variance between runs on all
+  configurations; exact p50 ordering shifts between runs.
 
 ## Getting started Dora CUDA GPU-to-GPU (Python)
 

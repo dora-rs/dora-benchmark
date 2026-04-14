@@ -63,8 +63,8 @@ _cudaMemcpyDeviceToHost = 2
 # ---------------------------------------------------------------------------
 # Benchmark parameters — match Dora cuda-latency exactly
 # ---------------------------------------------------------------------------
-SIZES = [512, 5120, 51200, 512000, 5120000]  # int64 element counts
-SAMPLES_PER_SIZE = 100
+SIZES = [1, 8, 64, 512, 5120, 51200, 512000, 5120000]  # int64 element counts
+SAMPLES_PER_SIZE = 1000
 WARMUP_SAMPLES = 10
 ELEMENT_SIZE = 8  # sizeof(int64_t)
 
@@ -185,7 +185,7 @@ class CudaTalker(Node):
                         f"ACK timeout at size={byte_size}B"
                     )
 
-                time.sleep(0.05)
+                time.sleep(0.005)
 
             # Free GPU buffer after bracket completes.
             _cuda_check(_cuda.cudaFree(d_ptr), "cudaFree")
